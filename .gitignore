@@ -1,0 +1,52 @@
+# Ignore compiled class files
+*.class
+
+# Ignore Java archives (JAR files)
+*.jar
+
+# Ignore log files
+*.log
+
+# Ignore the directory where compiled classes are stored (e.g., in IntelliJ IDEA, Eclipse, etc.)
+out/
+bin/
+
+# Ignore IDE-specific files and directories
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# NetBeans
+nbproject/
+
+# Ignore build and dependency directories for Maven/Gradle
+target/
+build/
+
+# Ignore Maven wrapper files (if you're not using Maven wrapper)
+.mvn/
+
+# Ignore the JVM temporary files
+*.swp
+
+# Ignore operating system-specific files (e.g., macOS, Windows)
+.DS_Store
+Thumbs.db
+
+# Ignore sensitive configuration files like credentials or database configs
+*.properties
+*.env
+
+# Ignore JavaFX-specific cache and generated files
+*.log
+.cache/
+
+# Ignore user-specific IntelliJ IDEA settings
+.idea/.idea/
+
+# Ignore any other sensitive files you may create
