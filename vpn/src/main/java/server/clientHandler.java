@@ -29,10 +29,11 @@ class clientHandler implements Runnable {
             String clientMsg;
             while ((clientMsg = in.readLine()) != null) {
                 System.out.println("Received request to: " + clientMsg);
-                String decryptedRequest = EncryptionUtils.decrypt(clientMsg);
-                String response = PacketForwarder.forwardRequest(decryptedRequest);
-                String encryptedResponse = EncryptionUtils.encrypt(response);
-                out.write(encryptedResponse + "\n");
+             //   String decryptedRequest = EncryptionUtils.decrypt(clientMsg);
+                String response = PacketForwarder.forwardRequest(clientMsg);
+              //  String encryptedResponse = EncryptionUtils.encrypt(response);
+                out.write(response + "\n");
+                System.out.println(response);
                 out.flush();
             }
         } catch (IOException e) {

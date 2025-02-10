@@ -37,26 +37,49 @@ public class VPNClientGUI extends JFrame {
     }
 
     private void fetchURL() {
-        try {
-            // Use the ClientSSLUtils to get the correct SSLSocketFactory for the client
-            SSLSocketFactory factory = ClientSSLUtils.getSSLSocketFactory();  // Changed to ClientSSLUtils
-            SSLSocket socket = (SSLSocket) factory.createSocket("localhost", 4433);  // Connect to server
+        responseArea.setText("Fetching data...");  // Show loading message
 
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+        SwingWorker<Void, String> worker = new SwingWorker<>() {
+            @Override
+            protected Void doInBackground() {
+                try {
+                    SSLSocketFactory factory = ClientSSLUtils.getSSLSocketFactory();
+                    SSLSocket socket = (SSLSocket) factory.createSocket("localhost", 4433);
 
-            String url = EncryptionUtils.encrypt(urlField.getText());  // Encrypt URL
-            out.write(url + "\n");
-            out.flush();
+                    BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 
-            responseArea.setText("");  // Clear previous response
-            String response;
-            while ((response = in.readLine()) != null) {
-                responseArea.append(EncryptionUtils.decrypt(response) + "\n");  // Decrypt server response
+                    // Get the user-entered URL
+                    String url = urlField.getText();
+                    out.write(url + "\n");
+                    out.flush();
+
+                    String responseLine;
+                    StringBuilder responseBuilder = new StringBuilder();
+
+                    // Read server response line by line
+                    while ((responseLine = in.readLine()) != null) {
+                        responseBuilder.append(responseLine).append("\n");
+                        publish(responseLine);  // Update UI progressively
+                    }
+
+                    socket.close();
+                    return null;
+                } catch (Exception e) {
+                    publish("Error: " + e.getMessage());
+                    return null;
+                }
             }
-            socket.close();  // Close the socket connection
-        } catch (Exception e) {
-            responseArea.setText("Error: " + e.getMessage());  // Display error if any
-        }
+
+            @Override
+            protected void process(java.util.List<String> chunks) {
+                for (String line : chunks) {
+                    responseArea.append(line + "\n");  // Update UI with new data
+                }
+            }
+        };
+
+        worker.execute();
     }
+
 }
