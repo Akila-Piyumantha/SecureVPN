@@ -1,65 +1,65 @@
+// VPNClientGUI.java (UI Package)
 package ui;
-import Security.SSLUtils;
-import client.EncryptionUtils;
 
-import java.io.*;
-import java.net.*;
-import java.security.KeyStore;
-import javax.net.ssl.*;
-import java.util.concurrent.*;
+import client.VPNClient;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.util.Base64;
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-public class VPNClientGUI extends JFrame {
-    private JTextField urlField;
-    private JTextArea responseArea;
+public class VPNClientGUI {
+    private final VPNClient client;
+    private JFrame frame;
+    private JTextArea statusArea;
+    private JButton connectButton, disconnectButton;
 
-    public VPNClientGUI() {
-        setTitle("VPN Client");
-        setSize(400, 300);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new BorderLayout());
-
-        urlField = new JTextField();
-        JButton fetchButton = new JButton("Fetch");
-        responseArea = new JTextArea();
-        responseArea.setEditable(false);
-
-        fetchButton.addActionListener(e -> fetchURL());
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.add(urlField, BorderLayout.CENTER);
-        topPanel.add(fetchButton, BorderLayout.EAST);
-
-        add(topPanel, BorderLayout.NORTH);
-        add(new JScrollPane(responseArea), BorderLayout.CENTER);
-        setVisible(true);
+    public VPNClientGUI(VPNClient client) {
+        this.client = client;
+        initializeUI();
     }
 
-    private void fetchURL() {
-        try {
-            SSLSocketFactory factory = SSLUtils.getSSLSocketFactory();
-            SSLSocket socket = (SSLSocket) factory.createSocket("localhost", 4433);
+    private void initializeUI() {
+        frame = new JFrame("VPN Client");
+        frame.setSize(400, 300);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLayout(new BorderLayout());
 
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+        statusArea = new JTextArea();
+        statusArea.setEditable(false);
+        frame.add(new JScrollPane(statusArea), BorderLayout.CENTER);
 
-            String url = EncryptionUtils.encrypt(urlField.getText());
-            out.write(url + "\n");
-            out.flush();
+        JPanel buttonPanel = new JPanel();
+        connectButton = new JButton("Connect");
+        disconnectButton = new JButton("Disconnect");
+        disconnectButton.setEnabled(false);
 
-            responseArea.setText("");
-            String response;
-            while ((response = in.readLine()) != null) {
-                responseArea.append(EncryptionUtils.decrypt(response) + "\n");
+        buttonPanel.add(connectButton);
+        buttonPanel.add(disconnectButton);
+        frame.add(buttonPanel, BorderLayout.SOUTH);
+
+        connectButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                client.connectToServer();
             }
-            socket.close();
-        } catch (Exception e) {
-            responseArea.setText("Error: " + e.getMessage());
-        }
+        });
+
+        disconnectButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                client.disconnectFromServer();
+            }
+        });
+
+        frame.setVisible(true);
+    }
+
+    public void updateStatus(String message) {
+        statusArea.append(message + "\n");
+    }
+
+    public void setConnectionState(boolean isConnected) {
+        connectButton.setEnabled(!isConnected);
+        disconnectButton.setEnabled(isConnected);
     }
 }

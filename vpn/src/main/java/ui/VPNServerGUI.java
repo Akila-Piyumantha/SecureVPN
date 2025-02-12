@@ -1,28 +1,43 @@
 package ui;
-import java.io.*;
-import java.net.*;
-import java.security.KeyStore;
-import javax.net.ssl.*;
-import java.util.concurrent.*;
+
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.util.Base64;
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
+import java.util.List;
 
 public class VPNServerGUI extends JFrame {
     private JTextArea logArea;
+    private DefaultListModel<String> clientListModel;
+    private JList<String> clientList;
 
     public VPNServerGUI() {
         setTitle("VPN Server");
-        setSize(400, 300);
+        setSize(500, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
+
         logArea = new JTextArea();
         logArea.setEditable(false);
-        add(new JScrollPane(logArea), BorderLayout.CENTER);
+
+        clientListModel = new DefaultListModel<>();
+        clientList = new JList<>(clientListModel);
+
+        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, new JScrollPane(clientList), new JScrollPane(logArea));
+        splitPane.setDividerLocation(150);
+
+        add(splitPane, BorderLayout.CENTER);
         setVisible(true);
+    }
+
+    public void updateClients(List<String> clients) {
+        SwingUtilities.invokeLater(() -> {
+            clientListModel.clear();
+            for (String client : clients) {
+                clientListModel.addElement(client);
+            }
+        });
+    }
+
+    public void log(String message) {
+        SwingUtilities.invokeLater(() -> logArea.append(message + "\n"));
     }
 }
