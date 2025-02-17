@@ -14,17 +14,45 @@ public class VPNClient {
     private VPNClientGUI ui;
     private boolean running = false;
 
+    private ServerSocket proxyServer; // Declare as instance variable
+    private Socket vpnSocket;         // Declare as instance variable
+
     public VPNClient(VPNClientGUI ui) {
         this.ui = ui;
     }
 
+    private void connectToVPNServer() {
+        try {
+            vpnSocket = new Socket(VPN_SERVER_IP, VPN_SERVER_PORT);
+            ui.log("🌐 Connected to VPN Server at " + VPN_SERVER_IP + ":" + VPN_SERVER_PORT);
 
+            BufferedReader vpnIn = new BufferedReader(new InputStreamReader(vpnSocket.getInputStream()));
+            PrintWriter vpnOut = new PrintWriter(vpnSocket.getOutputStream(), true);
+
+            // Optional: Send a handshake message
+            vpnOut.println("HELLO VPN SERVER");
+
+            // Read server responses (infinite loop to maintain connection)
+            String serverResponse;
+            while ((serverResponse = vpnIn.readLine()) != null && running) {
+                ui.log("💬 VPN Server: " + serverResponse);
+            }
+        } catch (IOException e) {
+            ui.log("❌ Failed to connect to VPN server: " + e.getMessage());
+        }
+    }
+git
     public void startClient() {
         running = true;
-        new Thread(() -> {
-            try (ServerSocket proxyServer = new ServerSocket(LOCAL_PROXY_PORT)) {
-                ui.log("✅ VPN Client running as local proxy on port " + LOCAL_PROXY_PORT);
 
+        // Connect to VPN Server when the client starts
+        new Thread(this::connectToVPNServer).start();
+
+        // Start Local Proxy Server
+        new Thread(() -> {
+            try {
+                proxyServer = new ServerSocket(LOCAL_PROXY_PORT); // Initialize proxyServer
+                ui.log("✅ VPN Client running as local proxy on port " + LOCAL_PROXY_PORT);
                 while (running) {
                     Socket clientSocket = proxyServer.accept();
                     new Thread(() -> handleClient(clientSocket)).start();
@@ -36,8 +64,28 @@ public class VPNClient {
     }
 
     public void stopClient() {
-        running = false;
+        running = false;  // Stop the client logic
         ui.log("🛑 VPN Client stopped.");
+
+        // Close the proxy server if it's running
+        try {
+            if (proxyServer != null && !proxyServer.isClosed()) {
+                proxyServer.close();
+                ui.log("✅ Proxy server stopped.");
+            }
+        } catch (IOException e) {
+            ui.log("❌ Error stopping proxy server: " + e.getMessage());
+        }
+
+        // Close VPN connection if it's active
+        try {
+            if (vpnSocket != null && !vpnSocket.isClosed()) {
+                vpnSocket.close();
+                ui.log("✅ VPN Server connection closed.");
+            }
+        } catch (IOException e) {
+            ui.log("❌ Error closing VPN connection: " + e.getMessage());
+        }
     }
 
     private void handleClient(Socket clientSocket) {
