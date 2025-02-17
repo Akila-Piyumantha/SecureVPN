@@ -41,7 +41,7 @@ public class VPNClient {
             ui.log("❌ Failed to connect to VPN server: " + e.getMessage());
         }
     }
-git
+
     public void startClient() {
         running = true;
 
