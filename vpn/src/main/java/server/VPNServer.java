@@ -21,7 +21,9 @@ public class VPNServer {
 
             while (running) {
                 Socket clientSocket = serverSocket.accept();
-                new Thread(new VPNHandler(clientSocket, ui)).start();
+                String userAddress = clientSocket.getInetAddress().getHostAddress();
+                ui.addUser(userAddress);
+                new Thread(new VPNHandler(clientSocket, ui, userAddress)).start();
             }
         } catch (IOException e) {
             ui.log("❌ Server Error: " + e.getMessage());
@@ -44,10 +46,12 @@ public class VPNServer {
 class VPNHandler implements Runnable {
     private final Socket clientSocket;
     private final VPNServerGUI ui;
+    private final String userAddress;
 
-    public VPNHandler(Socket socket, VPNServerGUI ui) {
+    public VPNHandler(Socket socket, VPNServerGUI ui, String userAddress) {
         this.clientSocket = socket;
         this.ui = ui;
+        this.userAddress = userAddress;
     }
 
     @Override
@@ -60,14 +64,11 @@ class VPNHandler implements Runnable {
             PrintWriter writer = new PrintWriter(clientOut, true);
 
             String requestLine = reader.readLine();
-            if (requestLine == null) {
-                return;
-            }
+            if (requestLine == null) return;
 
-            ui.log("📥 Incoming Request: " + requestLine);
+            ui.log("📥 Incoming Request from " + userAddress + ": " + requestLine);
 
-            String host = null;
-            String line;
+            String line, host = null;
             while (!(line = reader.readLine()).isEmpty()) {
                 if (line.toLowerCase().startsWith("host: ")) {
                     host = line.substring(6).trim();
@@ -81,18 +82,19 @@ class VPNHandler implements Runnable {
 
             forwardHttpRequest(host, requestLine, reader, writer);
         } catch (IOException e) {
-            ui.log("Error in VPNHandler: " + e.getMessage());
+            ui.log("Error handling user " + userAddress + ": " + e.getMessage());
+        } finally {
+            ui.removeUser(userAddress);
         }
     }
 
     private void forwardHttpRequest(String host, String requestLine, BufferedReader clientReader, PrintWriter clientWriter) {
         try (Socket serverSocket = new Socket(host, 80)) {
-            ui.log("🌍 Forwarding HTTP request to " + host);
+            ui.log("🌍 Forwarding request from " + userAddress + " to " + host);
 
-            OutputStream serverOut = serverSocket.getOutputStream();
+            PrintWriter serverWriter = new PrintWriter(serverSocket.getOutputStream(), true);
             BufferedReader serverIn = new BufferedReader(new InputStreamReader(serverSocket.getInputStream()));
 
-            PrintWriter serverWriter = new PrintWriter(serverOut, true);
             serverWriter.println(requestLine);
             serverWriter.println("Host: " + host);
             serverWriter.println();
@@ -104,7 +106,7 @@ class VPNHandler implements Runnable {
             }
             clientWriter.flush();
         } catch (IOException e) {
-            ui.log("❌ Error forwarding request: " + e.getMessage());
+            ui.log("❌ Error forwarding request for user " + userAddress + ": " + e.getMessage());
         }
     }
 }
