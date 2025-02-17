@@ -6,5 +6,5 @@ module com.example.vpn {
 
 
     opens com.example.vpn to javafx.fxml;
-    exports com.example.vpn;
+
 }

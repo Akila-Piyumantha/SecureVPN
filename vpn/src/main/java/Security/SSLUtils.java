@@ -6,12 +6,12 @@ import java.security.KeyStore;
 
 public class SSLUtils {
     // Server certificate files
-    private static final String SERVER_KEYSTORE = "src/certificates/server_keystore.jks";
-    private static final String SERVER_TRUSTSTORE = "src/certificates/server_truststore.jks";
+    private static final String SERVER_KEYSTORE = "C:/Users/User/Documents/UOR/6th sem/VPN/vpn/src/main/java/certificates/server_keystore.jks";
+    private static final String SERVER_TRUSTSTORE = "C:\\Users\\User\\Documents\\UOR\\6th sem\\VPN\\vpn\\src\\main\\java\\certificates\\server_truststore.jks";
 
     // Client certificate files
-    private static final String CLIENT_KEYSTORE = "src/certificates/client_keystore.jks";
-    private static final String CLIENT_TRUSTSTORE = "src/certificates/client_truststore.jks";
+    private static final String CLIENT_KEYSTORE = "C:\\Users\\User\\Documents\\UOR\\6th sem\\VPN\\vpn\\src\\main\\java\\certificates\\client_keystore.jks";
+    private static final String CLIENT_TRUSTSTORE = "C:\\Users\\User\\Documents\\UOR\\6th sem\\VPN\\vpn\\src\\main\\java\\certificates\\client_truststore.jks";
 
     private static final String PASSWORD = "password"; // Change this to match your certificate passwords
 
